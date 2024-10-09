@@ -1,0 +1,92 @@
+import smtplib
+import schedule
+import time
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
+from datetime import datetime
+
+# Function to send email
+def send_email(sender_email, sender_password, recipient_email, subject, body):
+    try:
+        # Set up the server
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        
+        # Login to the email server
+        server.login(sender_email, sender_password)
+        
+        # Create the email
+        msg = MIMEMultipart()
+        msg['From'] = sender_email
+        msg['To'] = recipient_email
+        msg['Subject'] = subject
+        
+        # Attach the body of the email
+        msg.attach(MIMEText(body, 'plain'))
+        
+        # Send the email
+        server.send_message(msg)
+        print(f"Email sent to {recipient_email} at {datetime.now()}")
+        
+        # Quit the server
+        server.quit()
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+
+# Function to compose email
+def compose_email():
+    sender_email = input("Enter your email: ")
+    sender_password = input("Enter your email password: ")
+    recipient_email = input("Enter recipient email: ")
+    subject = input("Enter the subject: ")
+    body = input("Enter the body of the email: ")
+
+    return sender_email, sender_password, recipient_email, subject, body
+
+# Function to schedule an email
+def schedule_email():
+    # Get the email details from the user
+    sender_email, sender_password, recipient_email, subject, body = compose_email()
+
+    # Get scheduling details
+    send_time = input("Enter when to send the email (e.g., '15:30' for 3:30 PM): ")
+
+    # Function to send the email at the scheduled time
+    def job():
+        send_email(sender_email, sender_password, recipient_email, subject, body)
+
+    # Schedule the email at the specified time
+    schedule.every().day.at(send_time).do(job)
+    print(f"Email scheduled to send at {send_time}.")
+
+# Main function to manage the process
+def email_automation():
+    print("Welcome to the Email Automation Script!")
+    
+    while True:
+        print("\nOptions:\n1. Send email now\n2. Schedule email\n3. Exit")
+        option = input("Choose an option: ")
+
+        if option == '1':
+            sender_email, sender_password, recipient_email, subject, body = compose_email()
+            send_email(sender_email, sender_password, recipient_email, subject, body)
+
+        elif option == '2':
+            schedule_email()
+
+        elif option == '3':
+            print("Exiting the program.")
+            break
+
+        else:
+            print("Invalid option. Please try again.")
+        
+        # Wait for scheduled emails
+        while True:
+            schedule.run_pending()
+            time.sleep(1)
+
+# Run the email automation script
+email_automation()
